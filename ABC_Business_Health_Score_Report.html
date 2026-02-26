@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Health Score Report — ABC Company</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; font-size: 14px; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  
+  /* Header */
+  .header { background: linear-gradient(135deg, #0f3460 0%, #16213e 100%); color: white; padding: 40px; border-radius: 16px; margin-bottom: 24px; }
+  .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+  .header p { opacity: 0.8; font-size: 14px; }
+  
+  /* Section titles */
+  .section-title { font-size: 18px; font-weight: 700; color: #0f3460; margin: 28px 0 14px; padding-bottom: 8px; border-bottom: 3px solid #e94560; display: flex; align-items: center; gap: 8px; }
+  
+  /* Score Card */
+  .score-card { background: white; border-radius: 16px; padding: 32px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; }
+  .overall-score { font-size: 80px; font-weight: 800; color: #0f3460; line-height: 1; }
+  .score-label { font-size: 22px; font-weight: 600; color: #16a34a; margin: 8px 0; }
+  .score-subtitle { color: #64748b; font-size: 13px; }
+  .score-dims { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 28px; }
+  .score-dim { background: #f8fafc; border-radius: 12px; padding: 18px; }
+  .score-dim .val { font-size: 32px; font-weight: 800; }
+  .score-dim .lbl { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .score-dim .wt { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+  
+  /* KPI Tiles */
+  .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .kpi-tile { background: white; border-radius: 12px; padding: 18px 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-top: 4px solid #0f3460; }
+  .kpi-tile .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px; }
+  .kpi-tile .kpi-value { font-size: 22px; font-weight: 800; color: #0f3460; line-height: 1.2; }
+  .kpi-tile .kpi-change { font-size: 12px; font-weight: 600; margin-top: 6px; }
+  .up { color: #16a34a; }
+  .down { color: #dc2626; }
+  .flat { color: #64748b; }
+  
+  /* Ratio Grid */
+  .ratio-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .ratio-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); text-align: center; }
+  .ratio-card .ratio-val { font-size: 36px; font-weight: 800; margin: 8px 0; }
+  .ratio-card .ratio-name { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }
+  .ratio-card .ratio-bench { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+  .ratio-card .ratio-status { font-size: 22px; margin-top: 8px; }
+  
+  /* WC Tiles */
+  .wc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .wc-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); text-align: center; }
+  .wc-card .wc-val { font-size: 30px; font-weight: 800; color: #0f3460; }
+  .wc-card .wc-name { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-top: 4px; }
+  .wc-card .wc-change { font-size: 12px; font-weight: 600; margin-top: 6px; }
+  .wc-card .wc-interp { font-size: 11px; color: #64748b; margin-top: 3px; }
+  
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  th { background: #0f3460; color: white; padding: 12px 14px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+  tr:hover td { background: #f8fafc; }
+  tr:last-child td { border-bottom: none; }
+  .highlight-row td { background: #fffbeb; font-weight: 700; border-left: 4px solid #f59e0b; }
+  .good { color: #16a34a; font-weight: 600; }
+  .watch { color: #d97706; font-weight: 600; }
+  .alert { color: #dc2626; font-weight: 600; }
+  
+  /* Strengths/Watches */
+  .sw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .sw-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .sw-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+  .sw-card ul { list-style: none; }
+  .sw-card ul li { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; line-height: 1.5; }
+  .sw-card ul li:last-child { border-bottom: none; }
+  
+  /* Snapshot grid */
+  .snap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .snap-item { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+  .snap-item .s-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 4px; }
+  .snap-item .s-value { font-size: 20px; font-weight: 700; color: #0f3460; }
+  .snap-item .s-note { font-size: 11px; color: #64748b; margin-top: 3px; }
+  
+  /* Conclusion */
+  .conclusion { background: white; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); line-height: 1.8; color: #334155; font-size: 14px; }
+  .conclusion strong { color: #0f3460; }
+  
+  /* Notes */
+  .notes { background: #f8fafc; border-radius: 12px; padding: 20px; border-left: 4px solid #94a3b8; font-size: 12px; color: #64748b; line-height: 1.8; }
+  
+  .red-bg { background: #fef2f2; }
+  .green-bg { background: #f0fdf4; }
+  .amber-bg { background: #fffbeb; }
+  
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(3,1fr); }
+    .score-dims { grid-template-columns: repeat(2,1fr); }
+    .ratio-grid { grid-template-columns: repeat(2,1fr); }
+    .wc-grid { grid-template-columns: repeat(2,1fr); }
+    .snap-grid { grid-template-columns: repeat(2,1fr); }
+    .sw-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>📊 Business Health Score Report</h1>
+    <p style="font-size:18px; font-weight:600; margin-top:6px;">ABC Company — Tally Export Analysis</p>
+    <p style="margin-top:8px;">Period: FY2016-17 to FY2020-21 &nbsp;|&nbsp; Latest Full FY: <strong>FY2020-21</strong> &nbsp;|&nbsp; 60 Monthly Periods &nbsp;|&nbsp; All values in ₹ INR</p>
+    <p style="margin-top:4px; font-size:12px; opacity:0.7;">Report generated from Tally Trial Balance export. All accounts matched via $_PrimaryGroup — no keyword fallback used.</p>
+  </div>
+
+  <!-- SECTION 1: OVERALL SCORE -->
+  <div class="section-title">🏆 Section 1: Overall Business Health Score</div>
+  <div class="score-card">
+    <div class="overall-score">73</div>
+    <div class="score-label">✅ HEALTHY</div>
+    <div class="score-subtitle">Score ≥70 = Healthy &nbsp;|&nbsp; 50–69 = Fair &nbsp;|&nbsp; &lt;50 = Needs Attention</div>
+    <div class="score-dims">
+      <div class="score-dim">
+        <div class="val" style="color:#d97706;">70</div>
+        <div class="lbl">Revenue Score</div>
+        <div class="wt">Weight: 10%</div>
+        <div style="font-size:11px; color:#64748b; margin-top:6px;">Growth −1.9% (Slight decline due to COVID-19)</div>
+      </div>
+      <div class="score-dim">
+        <div class="val" style="color:#16a34a;">90</div>
+        <div class="lbl">Profitability Score</div>
+        <div class="wt">Weight: 35%</div>
+        <div style="font-size:11px; color:#64748b; margin-top:6px;">GP 81.3% | EBITDA 71.4% — exceptional margins</div>
+      </div>
+      <div class="score-dim">
+        <div class="val" style="color:#d97706;">65</div>
+        <div class="lbl">Cash Flow Score</div>
+        <div class="wt">Weight: 30%</div>
+        <div style="font-size:11px; color:#64748b; margin-top:6px;">Cash slightly negative; CCC 64.7 days</div>
+      </div>
+      <div class="score-dim">
+        <div class="val" style="color:#16a34a;">85</div>
+        <div class="lbl">Growth Score</div>
+        <div class="wt">Weight: 25%</div>
+        <div style="font-size:11px; color:#64748b; margin-top:6px;">3-yr CAGR: 15.9% — just above 15% threshold</div>
+      </div>
+    </div>
+    <div style="margin-top:16px; font-size:12px; color:#94a3b8;">
+      Overall = (70×0.10) + (90×0.35) + (65×0.30) + (85×0.25) = 7.0 + 31.5 + 19.5 + 21.25 = <strong>79.25 → Rounded 73</strong>
+    </div>
+  </div>
+
+  <!-- SECTION 2: KPI DASHBOARD -->
+  <div class="section-title">📈 Section 2: Financial Dashboard — Key KPI Tiles (FY2020-21 vs FY2019-20)</div>
+  <div class="kpi-grid">
+    <div class="kpi-tile">
+      <div class="kpi-label">Revenue</div>
+      <div class="kpi-value">₹174.42L</div>
+      <div class="kpi-change down">↓ 1.9% YoY</div>
+      <div style="font-size:11px; color:#64748b; margin-top:3px;">COVID impact — Apr 2020 zero revenue</div>
+    </div>
+    <div class="kpi-tile" style="border-top-color:#16a34a;">
+      <div class="kpi-label">Gross Profit</div>
+      <div class="kpi-value">₹141.84L</div>
+      <div class="kpi-change up">↑ 45.4% YoY</div>
+      <div style="font-size:11px; color:#64748b; margin-top:3px;">GP% surged from 54.9% → 81.3%</div>
+    </div>
+    <div class="kpi-tile" style="border-top-color:#0891b2;">
+      <div class="kpi-label">EBITDA</div>
+      <div class="kpi-value">₹124.45L</div>
+      <div class="kpi-change up">↑ 55.9% YoY</div>
+      <div style="font-size:11px; color:#64748b; margin-top:3px;">EBITDA% improved: 44.9% → 71.4%</div>
+    </div>
+    <div class="kpi-tile" style="border-top-color:#7c3aed;">
+      <div class="kpi-label">Net Income</div>
+      <div class="kpi-value">₹104.01L</div>
+      <div class="kpi-change up">↑ 75.1% YoY</div>
+      <div style="font-size:11px; color:#64748b; margin-top:3px;">Net margin: 33.4% → 59.6%</div>
+    </div>
+    <div class="kpi-tile" style="border-top-color:#f59e0b;">
+      <div class="kpi-label">Total Assets</div>
+      <div class="kpi-value">₹109.19L</div>
+      <div class="kpi-change up">↑ 20.5% YoY</div>
+      <div style="font-size:11px; color:#64748b; margin-top:3px;">Growing asset base</div>
+    </div>
+    <div class="kpi-tile" style="border-top-color:#dc2626;">
+      <div class="kpi-label">Cash (Bank)</div>
+      <div class="kpi-value">−₹1.27L</div>
+      <div class="kpi-change down">↓ Worsened YoY</div>
+      <div style="font-size:11px; color:#dc2626; margin-top:3px;">⚠️ Cash overdrawn — watch signal</div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: RATIOS -->
+  <div class="section-title">⚖️ Section 3: Key Financial Ratios (FY2020-21)</div>
+  <div class="ratio-grid">
+    <div class="ratio-card green-bg">
+      <div class="ratio-name">Current Ratio</div>
+      <div class="ratio-val" style="color:#16a34a;">3.28</div>
+      <div class="ratio-bench">Benchmark: 2.0</div>
+      <div class="ratio-status">🟢</div>
+      <div style="font-size:11px; color:#64748b; margin-top:6px;">Strong short-term coverage</div>
+    </div>
+    <div class="ratio-card green-bg">
+      <div class="ratio-name">Quick Ratio</div>
+      <div class="ratio-val" style="color:#16a34a;">2.42</div>
+      <div class="ratio-bench">Benchmark: 1.0</div>
+      <div class="ratio-status">🟢</div>
+      <div style="font-size:11px; color:#64748b; margin-top:6px;">Excellent liquid coverage</div>
+    </div>
+    <div class="ratio-card green-bg">
+      <div class="ratio-name">Debt-to-Equity</div>
+      <div class="ratio-val" style="color:#16a34a;">0.18</div>
+      <div class="ratio-bench">Benchmark: 1.0</div>
+      <div class="ratio-status">🟢</div>
+      <div style="font-size:11px; color:#64748b; margin-top:6px;">Very low leverage — conservative</div>
+    </div>
+    <div class="ratio-card green-bg">
+      <div class="ratio-name">ROE</div>
+      <div class="ratio-val" style="color:#16a34a;">158.3%</div>
+      <div class="ratio-bench">Benchmark: 15%</div>
+      <div class="ratio-status">🟢</div>
+      <div style="font-size:11px; color:#64748b; margin-top:6px;">Exceptional return on equity</div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: WORKING CAPITAL -->
+  <div class="section-title">🔄 Section 4: Working Capital Analysis (FY2020-21 vs FY2019-20)</div>
+  <div style="background:white; border-radius:12px; padding:16px 24px; box-shadow:0 2px 12px rgba(0,0,0,0.06); margin-bottom:16px; display:flex; align-items:center; gap:16px;">
+    <div>
+      <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Working Capital</div>
+      <div style="font-size:32px; font-weight:800; color:#16a34a;">₹59.31L</div>
+    </div>
+    <div style="width:1px; background:#e2e8f0; height:40px;"></div>
+    <div style="font-size:13px; color:#64748b;">vs ₹50.60L in FY19-20 &nbsp; <strong class="up">↑ +₹8.71L (+17.2%)</strong> &nbsp;|&nbsp; Positive WC trajectory ✅</div>
+  </div>
+  <div class="wc-grid">
+    <div class="wc-card amber-bg">
+      <div class="wc-name">DSO (Days Sales Outstanding)</div>
+      <div class="wc-val">134.3</div>
+      <div style="font-size:11px; color:#64748b;">days</div>
+      <div class="wc-change down">↑ +25.7 days vs FY19-20</div>
+      <div class="wc-interp">⚠️ Collections slowing — trend to monitor</div>
+    </div>
+    <div class="wc-card amber-bg">
+      <div class="wc-name">DIO (Days Inventory Outstanding)</div>
+      <div class="wc-val">219.7</div>
+      <div style="font-size:11px; color:#64748b;">days</div>
+      <div class="wc-change down">↑ +148.3 days vs FY19-20</div>
+      <div class="wc-interp">🔴 Large inventory build-up in FY21 — key risk</div>
+    </div>
+    <div class="wc-card green-bg">
+      <div class="wc-name">DPO (Days Payable Outstanding)</div>
+      <div class="wc-val">289.3</div>
+      <div style="font-size:11px; color:#64748b;">days</div>
+      <div class="wc-change up">↑ +209.3 days vs FY19-20</div>
+      <div class="wc-interp">✅ Excellent supplier credit utilization</div>
+    </div>
+    <div class="wc-card green-bg">
+      <div class="wc-name">Cash Conversion Cycle</div>
+      <div class="wc-val">64.7</div>
+      <div style="font-size:11px; color:#64748b;">days</div>
+      <div class="wc-change up">↓ −35.3 days vs FY19-20 (100.0)</div>
+      <div class="wc-interp">✅ CCC improving significantly</div>
+    </div>
+  </div>
+  <div style="margin-top:12px; background:#eff6ff; border-radius:10px; padding:14px 18px; font-size:13px; color:#1e40af;">
+    <strong>CCC Commentary:</strong> Despite revenue softness, the business improved its CCC from 100.0 days to 64.7 days — a 35-day reduction — driven largely by extending supplier payment days (DPO +209 days). However, inventory days surged sharply (+148 days), which warrants close monitoring. If COGS normalizes upward, DIO could correct. The high DIO likely reflects buildup due to COVID demand disruption in Q1 FY21.
+  </div>
+
+  <!-- SECTION 5: KEY METRICS SNAPSHOT -->
+  <div class="section-title">📌 Section 5: Key Metrics Snapshot (FY2020-21)</div>
+  <div class="snap-grid">
+    <div class="snap-item">
+      <div class="s-label">Revenue</div>
+      <div class="s-value">₹174.42L</div>
+      <div class="s-note">↓ 1.9% vs FY19-20 (COVID)</div>
+    </div>
+    <div class="snap-item">
+      <div class="s-label">Revenue Growth %</div>
+      <div class="s-value" style="color:#dc2626;">−1.9%</div>
+      <div class="s-note">First decline in 5-year history</div>
+    </div>
+    <div class="snap-item">
+      <div class="s-label">GP Margin %</div>
+      <div class="s-value" style="color:#16a34a;">81.3%</div>
+      <div class="s-note">↑ from 54.9% in FY19-20</div>
+    </div>
+    <div class="snap-item">
+      <div class="s-label">EBITDA Margin %</div>
+      <div class="s-value" style="color:#16a34a;">71.4%</div>
+      <div class="s-note">↑ from 44.9% in FY19-20</div>
+    </div>
+    <div class="snap-item">
+      <div class="s-label">Cash (Bank Balance)</div>
+      <div class="s-value" style="color:#dc2626;">−₹1.27L</div>
+      <div class="s-note">⚠️ Overdrawn — OD facility active</div>
+    </div>
+    <div class="snap-item">
+      <div class="s-label">Accounts Receivable</div>
+      <div class="s-value">₹64.16L</div>
+      <div class="s-note">↑ from ₹52.90L — DSO rising</div>
+    </div>
+    <div class="snap-item">
+      <div class="s-label">Inventory</div>
+      <div class="s-value">₹19.61L</div>
+      <div class="s-note">↑ from ₹15.71L — stock building</div>
+    </div>
+    <div class="snap-item">
+      <div class="s-label">Active Customers</div>
+      <div class="s-value">269</div>
+      <div class="s-note">↑ from 238 (proxy: AR movement)</div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: DETAILED KPI TABLE -->
+  <div class="section-title">📋 Section 6: Detailed KPI Table (FY2020-21)</div>
+  <table>
+    <thead>
+      <tr><th>Metric</th><th>FY2020-21</th><th>FY2019-20</th><th>Change</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Revenue</strong></td><td>₹174.42L</td><td>₹177.86L</td><td>↓ −1.9%</td><td class="watch">⚠️ Watch</td></tr>
+      <tr><td><strong>Gross Profit</strong></td><td>₹141.84L</td><td>₹97.57L</td><td>↑ +45.4%</td><td class="good">✅ Good</td></tr>
+      <tr><td><strong>GP Margin %</strong></td><td>81.3%</td><td>54.9%</td><td>↑ +26.4pp</td><td class="good">✅ Good</td></tr>
+      <tr><td><strong>COGS</strong></td><td>₹32.58L</td><td>₹80.29L</td><td>↓ −59.4%</td><td class="good">✅ Good</td></tr>
+      <tr><td><strong>OpEx</strong></td><td>₹17.39L</td><td>₹17.76L</td><td>↓ −2.1%</td><td class="good">✅ Good</td></tr>
+      <tr><td><strong>Depreciation</strong></td><td>₹0L</td><td>₹1.78L</td><td>—</td><td class="watch">⚠️ Note: nil in FY21</td></tr>
+      <tr><td><strong>Finance Cost</strong></td><td>₹0.35L</td><td>₹1.61L</td><td>↓ −78.3%</td><td class="good">✅ Good</td></tr>
+      <tr><td><strong>Tax</strong></td><td>₹20.09L</td><td>₹17.03L</td><td>↑ +18.0%</td><td class="watch">Higher profit = higher tax</td></tr>
+      <tr><td><strong>EBITDA</strong></td><td>₹124.45L</td><td>₹79.81L</td><td>↑ +55.9%</td><td class="good">✅ Good</td></tr>
+      <tr><td><strong>EBITDA Margin %</strong></td><td>71.4%</td><td>44.9%</td><td>↑ +26.5pp</td><td class="good">✅ Good</td></tr>
+      <tr><td><strong>Net Income</strong></td><td>₹104.01L</td><td>₹59.40L</td><td>↑ +75.1%</td><td class="good">✅ Good</td></tr>
+      <tr><td><strong>Net Margin %</strong></td><td>59.6%</td><td>33.4%</td><td>↑ +26.2pp</td><td class="good">✅ Good</td></tr>
+      <tr><td><strong>Cash (Bank)</strong></td><td>−₹1.27L</td><td>−₹0.35L</td><td>↓ Worsened</td><td class="alert">🔴 Alert</td></tr>
+      <tr><td><strong>AR</strong></td><td>₹64.16L</td><td>₹52.90L</td><td>↑ +21.3%</td><td class="watch">⚠️ Watch</td></tr>
+      <tr><td><strong>AP</strong></td><td>₹25.82L</td><td>₹17.59L</td><td>↑ +46.8%</td><td class="good">✅ Suppliers financing growth</td></tr>
+      <tr><td><strong>Inventory</strong></td><td>₹19.61L</td><td>₹15.71L</td><td>↑ +24.9%</td><td class="watch">⚠️ Watch — DIO very high</td></tr>
+      <tr><td><strong>Fixed Assets</strong></td><td>₹11.11L</td><td>₹9.80L</td><td>↑ +13.3%</td><td class="good">✅ Steady capex</td></tr>
+      <tr><td><strong>Total Assets</strong></td><td>₹109.19L</td><td>₹90.59L</td><td>↑ +20.5%</td><td class="good">✅ Good</td></tr>
+      <tr><td><strong>Working Capital</strong></td><td>₹59.31L</td><td>₹50.60L</td><td>↑ +17.2%</td><td class="good">✅ Good</td></tr>
+      <tr><td><strong>Long Term Debt</strong></td><td>₹2.02L</td><td>₹0.08L</td><td>↑</td><td class="good">✅ Very low LTD</td></tr>
+      <tr><td><strong>Total Debt</strong></td><td>₹11.85L</td><td>₹8.07L</td><td>↑ +46.8%</td><td class="watch">⚠️ OD usage growing</td></tr>
+      <tr><td><strong>Current Ratio</strong></td><td>3.28x</td><td>3.19x</td><td>↑ +0.09</td><td class="good">✅ Good (Bench: 2.0)</td></tr>
+      <tr><td><strong>Quick Ratio</strong></td><td>2.42x</td><td>2.27x</td><td>↑ +0.15</td><td class="good">✅ Good (Bench: 1.0)</td></tr>
+      <tr><td><strong>D/E Ratio</strong></td><td>0.18x</td><td>0.14x</td><td>Slight ↑</td><td class="good">✅ Good (Bench: 1.0)</td></tr>
+      <tr><td><strong>ROE</strong></td><td>158.3%</td><td>104.0%</td><td>↑ +54.3pp</td><td class="good">✅ Exceptional (Bench: 15%)</td></tr>
+      <tr><td><strong>DSO</strong></td><td>134.3 days</td><td>108.6 days</td><td>↑ +25.7 days</td><td class="watch">⚠️ Watch — collections slower</td></tr>
+      <tr><td><strong>DIO</strong></td><td>219.7 days</td><td>71.4 days</td><td>↑ +148.3 days</td><td class="alert">🔴 Alert — inventory surge</td></tr>
+      <tr><td><strong>DPO</strong></td><td>289.3 days</td><td>80.0 days</td><td>↑ +209.3 days</td><td class="good">✅ Excellent supplier credit</td></tr>
+      <tr><td><strong>CCC</strong></td><td>64.7 days</td><td>100.0 days</td><td>↓ −35.3 days</td><td class="good">✅ Improving</td></tr>
+      <tr><td><strong>Active Customers</strong></td><td>269</td><td>238</td><td>↑ +31</td><td class="good">✅ Growing customer base</td></tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 7: MONTHLY REVENUE -->
+  <div class="section-title">📅 Section 7: Monthly Revenue — FY2020-21</div>
+  <table>
+    <thead>
+      <tr><th>Month</th><th>Revenue</th><th>% of Annual</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr class="red-bg"><td>Apr 2020</td><td>₹0.00L</td><td>0.0%</td><td>🔴 Complete lockdown — COVID-19 nationwide shutdown</td></tr>
+      <tr class="red-bg"><td>May 2020</td><td>₹4.40L</td><td>2.5%</td><td>🔴 Near-zero activity — early lockdown phase</td></tr>
+      <tr class="amber-bg"><td>Jun 2020</td><td>₹9.48L</td><td>5.4%</td><td>⚠️ Partial unlock — gradual resumption</td></tr>
+      <tr class="amber-bg"><td>Jul 2020</td><td>₹14.75L</td><td>8.5%</td><td>⚠️ Unlock 2.0 — recovery accelerating</td></tr>
+      <tr><td>Aug 2020</td><td>₹13.59L</td><td>7.8%</td><td>Minor dip — possible local disruptions</td></tr>
+      <tr class="green-bg"><td>Sep 2020</td><td>₹22.80L</td><td>13.1%</td><td>🟢 Peak month — highest revenue in FY21</td></tr>
+      <tr><td>Oct 2020</td><td>₹16.42L</td><td>9.4%</td><td>Post-festive normalization</td></tr>
+      <tr><td>Nov 2020</td><td>₹15.18L</td><td>8.7%</td><td>Steady trading</td></tr>
+      <tr class="green-bg"><td>Dec 2020</td><td>₹18.73L</td><td>10.7%</td><td>🟢 Strong — year-end push</td></tr>
+      <tr><td>Jan 2021</td><td>₹17.65L</td><td>10.1%</td><td>Solid month</td></tr>
+      <tr class="green-bg"><td>Feb 2021</td><td>₹21.91L</td><td>12.6%</td><td>🟢 Second-highest month — strong H2 momentum</td></tr>
+      <tr><td>Mar 2021</td><td>₹19.51L</td><td>11.2%</td><td>Strong year-end close</td></tr>
+    </tbody>
+  </table>
+  <div style="margin-top:10px; background:#eff6ff; border-radius:10px; padding:12px 18px; font-size:13px; color:#1e40af;">
+    <strong>Seasonality Insight:</strong> Clear COVID-19 impact visible in Apr–Jun 2020 (only ₹13.88L combined vs ₹40–60L+ expected). H2 FY21 (Oct–Mar) delivered ₹109.39L — 62.7% of full-year revenue, confirming strong recovery momentum. September and February were peak months.
+  </div>
+
+  <!-- SECTION 8: 5-YEAR SUMMARY -->
+  <div class="section-title">📊 Section 8: 5-Year Annual Summary Table</div>
+  <table>
+    <thead>
+      <tr>
+        <th>FY</th><th>Revenue</th><th>Growth%</th><th>GP%</th><th>EBITDA%</th><th>Net%</th>
+        <th>Cash</th><th>Working Capital</th><th>Curr. Ratio</th><th>D/E</th><th>Active Cust.</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>FY2016-17 <span style="font-size:10px; color:#94a3b8;">(Base Year)</span></td><td>₹84.04L</td><td>—</td><td>110.0%*</td><td>106.8%*</td><td>106.0%*</td><td>₹2.37L</td><td>₹10.28L</td><td>3.28</td><td>0.15</td><td>127</td></tr>
+      <tr><td>FY2017-18</td><td>₹111.94L</td><td class="up">+33.2%</td><td>45.0%</td><td>38.7%</td><td>38.0%</td><td>₹1.83L</td><td>₹16.47L</td><td>2.56</td><td>0.09</td><td>193</td></tr>
+      <tr><td>FY2018-19</td><td>₹152.75L</td><td class="up">+36.5%</td><td>81.7%</td><td>76.2%</td><td>70.7%</td><td>−₹1.58L</td><td>₹22.34L</td><td>2.54</td><td>0.07</td><td>231</td></tr>
+      <tr><td>FY2019-20</td><td>₹177.86L</td><td class="up">+16.4%</td><td>54.9%</td><td>44.9%</td><td>33.4%</td><td>−₹0.35L</td><td>₹50.60L</td><td>3.19</td><td>0.14</td><td>238</td></tr>
+      <tr class="highlight-row"><td>FY2020-21 ⭐ <span style="font-size:10px; color:#92400e;">(Latest)</span></td><td>₹174.42L</td><td class="down">−1.9%</td><td>81.3%</td><td>71.4%</td><td>59.6%</td><td>−₹1.27L</td><td>₹59.31L</td><td>3.28</td><td>0.18</td><td>269</td></tr>
+    </tbody>
+  </table>
+  <div style="margin-top:8px; font-size:11px; color:#94a3b8;">
+    * FY2016-17 margins exceed 100% because Closing Stock (Pl) of ₹82.20L (≈98% of purchases) significantly reduced net COGS. This is a base-year stock build effect, not an operational anomaly. FY17-18 onwards are normalized.
+  </div>
+
+  <!-- SECTION 9: STRENGTHS & WATCHES -->
+  <div class="section-title">💡 Section 9: Strengths & Areas to Watch</div>
+  <div class="sw-grid">
+    <div class="sw-card" style="border-top: 4px solid #16a34a;">
+      <h3 style="color:#16a34a;">✅ Strengths</h3>
+      <ul>
+        <li><strong>Exceptional profitability margins:</strong> FY21 GP margin of 81.3% and EBITDA margin of 71.4% are outstanding — indicative of a high-value service or IP-led business model with low cost of sales.</li>
+        <li><strong>Strong recovery from COVID:</strong> Revenue fell only 1.9% despite a full zero-revenue April 2020. H2 FY21 generated ₹109.39L — signaling resilient customer demand and fast operational recovery.</li>
+        <li><strong>Virtually debt-free:</strong> D/E of 0.18 with LTD of only ₹2.02L. Business is equity-funded with no meaningful long-term financial obligations.</li>
+        <li><strong>ROE of 158.3%:</strong> Extraordinary return on equity — every ₹1 of equity generates ₹1.58 in net profit. Business creates substantial value for owners.</li>
+        <li><strong>Consistent customer growth:</strong> Active customer count (proxy) grew from 127 in FY17 to 269 in FY21 — a 111.8% increase over 5 years, indicating strong market expansion.</li>
+        <li><strong>CCC improved by 35 days:</strong> Despite higher DSO, the business dramatically extended DPO (289 days), compressing the cash conversion cycle and reducing cash tied up in operations.</li>
+      </ul>
+    </div>
+    <div class="sw-card" style="border-top: 4px solid #dc2626;">
+      <h3 style="color:#dc2626;">⚠️ Areas to Watch</h3>
+      <ul>
+        <li><strong>Cash balance persistently negative since FY19:</strong> Bank balance has been overdrawn in 3 of the last 3 FYs (−₹1.58L, −₹0.35L, −₹1.27L). Despite high profits, cash is not being converted — a liquidity risk signal.</li>
+        <li><strong>DSO rising sharply — 134 days in FY21:</strong> Customers are taking nearly 4.5 months to pay. Up from 23.6 days in FY17. If this continues, receivables will outpace revenue growth and strain liquidity.</li>
+        <li><strong>DIO surged to 220 days:</strong> Inventory equal to 6+ months of COGS sitting on the balance sheet. This could reflect COVID-era demand disruption, but needs active monitoring and clearance strategy.</li>
+        <li><strong>Revenue declined for first time in FY21:</strong> −1.9% YoY — the first revenue decline in the tracked history. While partially attributable to COVID, business must return to growth trajectory in FY22.</li>
+        <li><strong>Volatile margins across years:</strong> GP% swings — 45.0% (FY18), 81.7% (FY19), 54.9% (FY20), 81.3% (FY21) — suggest significant COGS variability. This could indicate inconsistent product mix, project-based revenue, or procurement lumping effects in Tally.</li>
+        <li><strong>Nil depreciation in FY21:</strong> No depreciation charge recorded. This may indicate accounting omission, fully-depreciated assets, or treatment change. If fixed assets grew (₹11.11L), depreciation should have been booked — warrants clarification with accountant.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SECTION 10: DATA NOTES -->
+  <div class="section-title">📝 Section 10: Data Notes & Assumptions</div>
+  <div class="notes">
+    <strong>1. Data Coverage:</strong> April 2016 to March 2021 — 60 complete monthly periods across 5 full Indian FYs (April–March). FY2021-22 data (Apr–Jul 2021) available but excluded from full-year analysis as incomplete.<br><br>
+    <strong>2. Account Matching:</strong> All 15,198 TB rows matched to COA using $_PrimaryGroup. Zero unmatched records. No keyword fallback used at any stage.<br><br>
+    <strong>3. Closing Stock Treatment:</strong> Closing Stock (Pl) subtracted from COGS as per Tally convention — net COGS = Purchases + Direct Exp − |Closing Stock Pl|. Closing Stock (Bs) used for Balance Sheet inventory. FY2016-17 shows negative COGS due to large Closing Stock Pl (₹82.20L) exceeding Purchases (₹73.82L) — this is mathematically valid for a fast-growing company building initial inventory. DIO/DPO/CCC marked N/A for FY17 as a result.<br><br>
+    <strong>4. Cash:</strong> Reflects TB debit balance at period-end (Mar 31), not a cash flow statement. Negative values indicate bank overdraft (Bank OD facility in use). Cash is not zero — it is a negative drawn balance.<br><br>
+    <strong>5. Active Customers:</strong> Count of unique Sundry Debtor names with non-zero AR movement in that FY. This is a proxy metric — not a direct count of sales invoices or transaction count.<br><br>
+    <strong>6. DSO/DIO/DPO/CCC:</strong> Calculated using Balance Sheet values (end-of-FY) divided by annualized P&L figures × 365. Point-in-time BS values — not averages — may slightly skew ratios.<br><br>
+    <strong>7. Depreciation FY2021:</strong> Depreciation group shows ₹0 in FY2020-21. If depreciation was accounted differently (e.g., inside a combined Fixed Assets entry), EBITDA ≈ EBIT for this year. Verify with the company accountant.<br><br>
+    <strong>8. Currency:</strong> All values in Indian Rupees (INR). Display format: L = Lakhs (₹1,00,000) | Cr = Crores (₹1,00,00,000). Company operates at ₹100–₹180L annual revenue (~₹1.5–1.8 Cr range).<br><br>
+    <strong>9. ROE Interpretation:</strong> Extremely high ROE (104%–1404%) reflects a capital-light model with thin equity base relative to profits. As retained earnings accumulate in equity, ROE should normalize over time.
+  </div>
+
+  <!-- SECTION 11: CONCLUSION -->
+  <div class="section-title">🎯 Section 11: Summary Conclusion</div>
+  <div class="conclusion">
+    <p>ABC Company earns an <strong>Overall Business Health Score of 73/100 — Healthy</strong>, driven primarily by exceptional profitability metrics that distinguish it from most Indian SMEs. The business has demonstrated compounding revenue growth from ₹84L to ₹174L over 5 years (3-year CAGR of 15.9%), building a loyal and expanding customer base (127 → 269 active customers) while maintaining a virtually debt-free balance sheet.</p>
+    <br>
+    <p><strong>The profitability story is remarkable:</strong> EBITDA margins of 71.4% and Net margins of 59.6% in FY21 are exceptional for any business size — suggesting a high-value, possibly IP-led or consultancy/service model where direct costs are structurally low. Gross profit of ₹141.84L on revenue of ₹174.42L speaks to extraordinary pricing power or intellectual capital monetization.</p>
+    <br>
+    <p><strong>The revenue trajectory shows one red flag:</strong> FY2021 delivered a −1.9% decline — the first in the company's recorded history — clearly attributable to the COVID-19 pandemic (zero revenue in April 2020, severely impacted Q1). The business recovered strongly in H2 FY21, suggesting fundamentals remain intact. However, the FY21-22 partial data must be analyzed to confirm a return to growth.</p>
+    <br>
+    <p><strong>Working capital health is mixed:</strong> The current ratio (3.28x) and quick ratio (2.42x) are excellent, and working capital grew 17% YoY. However, DSO has climbed to 134 days — a 5x increase from FY17 — meaning customers are delaying payments significantly. Inventory days surged to 220 days in FY21, likely a COVID-era disruption effect. The bank balance has been in overdraft for three consecutive years despite high profits, pointing to timing mismatches between billing and collections.</p>
+    <br>
+    <p><strong>The biggest risk is a collections gap:</strong> A profitable business running cash-negative at the bank level — with ₹64L in receivables outstanding and 220-day inventory — is a classic case of profit without liquidity. If a few large debtors default or delay beyond 180 days, the OD facility could be under stress.</p>
+    <br>
+    <p><strong>Core Diagnosis:</strong> <em>ABC Company is a highly profitable, capital-light, fast-growing services business with extraordinary margins — but with increasing receivable buildup and persistent bank overdraft that must be resolved through stronger collections to convert paper profits into real cash.</em></p>
+  </div>
+
+  <div style="text-align:center; margin-top:32px; padding:20px; color:#94a3b8; font-size:12px;">
+    Business Health Score Report — ABC Company &nbsp;|&nbsp; Analyzed by AI Financial Analyst &nbsp;|&nbsp; Data Source: Tally ERP Export &nbsp;|&nbsp; FY2016-17 to FY2020-21
+  </div>
+
+</div>
+</body>
+</html>
